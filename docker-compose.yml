@@ -1,0 +1,77 @@
+services:
+  # Redis for caching and task queue
+  redis:
+    image: redis:7-alpine
+    container_name: crispr_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: crispr_backend
+    env_file:
+      - ./.env
+    environment:
+      - PYTHONPATH=/app:/app/backend
+    ports:
+      - "5001:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app/backend
+      - ./data:/data
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: crispr_frontend
+    env_file:
+      - ./.env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      
+# Celery Worker
+  celery-worker:
+    build:
+      context: ./backend/celery_app
+      dockerfile: Dockerfile
+    container_name: celery_worker
+    env_file:
+      - ./.env
+    environment:
+      - PYTHONPATH=/app:/app/backend
+      - PYTHONUNBUFFERED=1
+      - OMP_NUM_THREADS=1
+      - OPENBLAS_NUM_THREADS=1
+      - MKL_NUM_THREADS=1
+      - NUMEXPR_NUM_THREADS=1
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app/backend
+      - ./data:/data
+    command: ["micromamba","run","-n","celery","celery","-A","backend.celery_app.celery_app.celery_app","worker","--loglevel=info"]
+
+volumes:
+  postgres_data:
+  redis_data:
