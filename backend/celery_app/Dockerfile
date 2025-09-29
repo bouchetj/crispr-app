@@ -12,4 +12,4 @@ RUN micromamba run -n celery python -m pip install --no-cache-dir -r /tmp/requir
 
 COPY .. /app
 
-CMD ["micromamba", "run", "-n", "celery", "celery", "-A", "backend.celery_app.celery_app.celery_app", "worker", "--loglevel=info"]
+CMD ["micromamba", "run", "-n", "celery", "celery", "-A", "backend.celery_app.celery_app.celery_app", "worker", "--loglevel=info", "--concurrency=1"]

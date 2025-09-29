@@ -385,9 +385,20 @@ def summarize_one_guide(
 
         hit_counter += 1
 
-    summary.mismatch_bins = profile_row[["0MM", "1MM", "2MM", "3MM", "4MM"]].astype(int).tolist()
+    mismatch_bins = profile_row[["0MM", "1MM", "2MM", "3MM", "4MM"]].astype(int).tolist()
+
+    if primary_perfect is not None:
+        if summary.num_hits > 0:
+            summary.num_hits = max(summary.num_hits - 1, 0)
+        if mismatch_bins:
+            mismatch_bins[0] = max(mismatch_bins[0] - 1, 0)
+
+    summary.mismatch_bins = mismatch_bins
 
     on_target_present = num_perfect >= 1
+
+    if on_target_present and primary_perfect:
+        summary.cfd_sum -= primary_cfd
 
     specificity = 100 / (100 + summary.cfd_sum)
 

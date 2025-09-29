@@ -322,7 +322,9 @@ def test_summarize_one_guide(monkeypatch: pytest.MonkeyPatch):
     assert summary["protospacer"] == guide_seq[:-3]
     assert summary["on_target_present"] is True
     assert summary["num_perfect_sites"] == 1
-    assert summary["specificity"] == pytest.approx(0.99, abs=1e-2)
+    assert summary["off_targets"].num_hits == 1
+    assert summary["off_targets"].mismatch_bins[0] == 0
+    assert summary["specificity"] == pytest.approx(1)
     assert summary["off_targets"].num_bulged_hits == 1
     assert summary["top_bulged"][0].bulge_type == "RNA"
 
