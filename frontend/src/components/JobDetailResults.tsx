@@ -36,7 +36,7 @@ function SpecificityBadge({ value }: { value?: number }) {
     return <Text c="dimmed">—</Text>
   }
 
-  const val = Math.round(Math.min(Math.max(value, 0), 100))
+  const val = Math.round(Math.min(Math.max(100 * value, 0), 100))
   let gradient: { from: string; to: string }
 
   if (val < 40) {

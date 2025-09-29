@@ -1,85 +1,142 @@
-# CRISPR Design Tool
+# 🧬 CRISPR Design Tool
 
-Built a full-stack CRISPR design web platform integrating Python pipelines (CRISPRitz, RS3, CFD) with a FastAPI backend, React frontend, and Celery task queue. Deployed with Docker. Designed to manage CRISPR guide design runs and off-target results with a scalable architecture.
+A full-stack CRISPR design tool integrating [CRISPRitz](https://github.com/pinellolab/CRISPRitz), [RS3](https://github.com/gpp-rnd/rs3) and [CFD](https://pmc.ncbi.nlm.nih.gov/articles/PMC4744125/) into a scalable web platform with a **FastAPI backend**, **React frontend**, and **Celery task queue**.  
+Deployed via Docker for reproducible runs. Built to manage CRISPR guide design jobs, off-target analysis, and scoring with a scalable, modular architecture.
 
-## Highlights
-- Single-click guide design flow covering sequence validation, NGG protospacer discovery, off-target analysis, and RS3 efficacy scoring.
-- Redis-backed job tracking with optimistic caching so identical design requests reuse prior results.
-- Frontend dashboards for live progress monitoring, job history, and ranked guide inspection.
-- Containerised services (backend API, Celery worker, Redis, Vite frontend) orchestrated via `docker compose` for reproducible local runs.
+👉 **Try the live demo:** [https://crispr.jubslab.org](https://crispr.jubslab.org)
 
-## Repository Layout
-- `backend/` – FastAPI app, sequence utilities, Celery tasks, and Redis job store helpers.
-- `backend/celery_app/` – Micromamba-based image definition and requirements for the worker.
-- `frontend/` – Vite + React TypeScript SPA using Mantine UI and TanStack Query.
-- `data/` – Local mount point for genome references, CRISPRitz indices, CFD scoring pickles, and job outputs.
-- `docker-compose.yml` – Spins up Redis, backend API, Celery worker, and frontend.
+---
 
-## Architecture Overview
-1. **Frontend (Vite dev server)** calls the backend at `POST /api/design` and immediately routes the user to a job detail page.
-2. **Backend (FastAPI)** validates input, creates a job record in Redis, checks for cached results, and enqueues work on Celery.
-3. **Celery worker** runs the design pipeline:
-   - sanitises the sequence and finds SpCas9 NGG candidates,
-   - executes `crispritz.py` against the configured genome index,
-   - scores off-target hits with CFD and RS3, writing artefacts into `/data/results/<job_id>`.
-   Progress is streamed back into Redis to keep the UI current.
-4. **Redis** stores job metadata, cached payloads, and powers the queue/broker.
+## 🚀 Features
 
-> ⚠️ **Scope:** The MVP currently supports only SpCas9 with an NGG PAM on the hg38 genome. Extending to other systems requires additional indices, scoring assets, and small code changes.
+- **Single-click design**: Validate sequences, discover NGG protospacers, run off-target searches, and compute RS3 efficacy + CFD specificity scores.
+    
+- **Live progress tracking**: Redis-backed job management with caching so repeated inputs reuse existing results.
+    
+- **Interactive frontend**: Dashboards for monitoring job status, browsing past runs, and inspecting ranked guides.
+    
+- **Containerized deployment**: Backend API, Celery worker, Redis, and Vite frontend orchestrated with `docker compose`.
+    
 
-## Prerequisites
-- Docker 24+ and Docker Compose plugin.
-- Access to CRISPRitz assets and scoring data placed under `data/`.
+---
 
-## Download required data
+## 📸 Screenshots
 
-- Download the hg38 genome (per chromosome)
+_(examples – place actual images in `/docs/screenshots/`)_
 
-`wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.chromFa.tar.gz && gunzip hg38.fa.gz`
+1. **Dashboard** – system status & job submission.
+    
+2. **Job progress** – progress bar/spinner → green checkmark.
+    
+3. **Results table** – guides with scores, mismatches, off-targets.
+    
+4. **Genome viewer (coming soon)** – guides mapped onto input sequence.
+    
 
-- Index the genome with `crispritz.py` to get the NGG_2_hg38 directory
+`![Dashboard Screenshot](docs/screenshots/dashboard.png)`
 
-`crispritz.py index-genome hg38 hg38/ pam/pamNGG.txt -bMax 2 -th 4`
+---
 
-## Configure Environment
-1. Duplicate the example settings:
-   ```bash
-   cp .env.example .env
-   ```
-2. Confirm the paths inside `.env` match the mounted files under `data/`. Required artefacts:
-   | Setting | Default path | Notes |
-   | --- | --- | --- |
-   | `HG38_REFERENCE_FASTA` | `/data/genomes/hg38/hg38.fa` | Reference FASTA used by CRISPRitz. |
-   | `CRISPRITZ_INDEX` | `/data/genomes/hg38/NGG_2_hg38` | Pre-built CRISPRitz NGG index directory. |
-   | `CRISPRITZ_PAM_TXT` | `/data/PAM/pamNGG.txt` | PAM definition consumed by CRISPRitz. |
-   | `CRISPRITZ_ANNOTATIONS_BED` | `/data/genomes/hg38/hg38Annotation.bed` | Optional; enriches off-target annotations. |
-   | `MISMATCH_SCORES` | `/data/CFD_scoring_matrix/mismatch_score.pkl` | Pickle bundle for CFD scoring. |
-   | `PAM_SCORES` | `/data/CFD_scoring_matrix/pam_scores.pkl` | Pair with mismatch scores for CFD. |
-   | `CRISPRITZ_RESULTS_DIR` | `/data/results` | Output folder mounted to persist per-job files. |
+## 🏗️ Architecture
 
-## Run with Docker Compose
-```bash
-docker compose up --build
+1. **Frontend (React + Vite)** → calls backend (`POST /api/design`), displays job status + results.
+    
+2. **Backend (FastAPI)** → validates input, records jobs in Redis, checks cache, enqueues Celery tasks.
+    
+3. **Celery Worker** → executes the design pipeline:
+    
+    - Candidate discovery (SpCas9 NGG).
+        
+    - Off-target search with CRISPRitz.
+        
+    - Scoring (CFD & RS3).
+        
+    - Results written to `/data/results/<job_id>`.
+        
+    - Progress streamed to Redis for UI updates.
+        
+4. **Redis** → powers caching, message queue, and job metadata.
+    
+
+> ⚠️ **Scope:** MVP supports _SpCas9 + NGG PAM on hg38_. More nucleases/genomes can be added with additional indices + scoring assets.
+
+---
+
+## 📂 Repository Layout
+
+- `backend/` → FastAPI app, Celery tasks, scoring utilities.
+    
+- `frontend/` → React + TypeScript SPA using Mantine + TanStack Query.
+    
+- `data/` → Genome references, CRISPRitz indices, scoring pickles, job outputs.
+    
+- `docker-compose.yml` → Spins up backend, frontend, Redis, Celery worker.
+    
+
+---
+
+## ⚙️ Setup
+
+### Prerequisites
+
+- Docker 24+ with Compose plugin.
+    
+- CRISPRitz genome indices + scoring assets (see below).
+    
+
+### Download hg38 reference & build index
+
 ```
-This launches Redis, the FastAPI API on `http://localhost:5001`, the Vite frontend on `http://localhost:3000`, and a Celery worker. Hot-reload is enabled via bind mounts.
-
-### Accessing the App
-- Navigate to `http://localhost:3000` to open the UI.
-- The API exposes OpenAPI docs at `http://localhost:5001/docs`.
-
-### Shutting Down
-```bash
-docker compose down
+cd data/genomes/hg38
+wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.chromFa.tar.gz
+tar -xzf hg38.chromFa.tar.gz -C hg38
+crispritz.py index-genome data/genomes/hg38/hg38 data/genomes/hg38 pam/pamNGG.txt -bMax 2 -th 4
 ```
-Add `--volumes` if you want to wipe Redis data between runs.
 
-## Testing
-- Backend: `RUN_INTEGRATION=1 PYTHONPATH=backend python -m pytest backend/tests`
 
-`RUN_INTEGRATION=1` runs the larger integration tests. Do not include if you do not want to run these tests. To only run the integration tests add `-m integration` to the command.
+### Configure environment
 
-Frontend testing to come...
+`cp .env.example .env`
 
-## Next Steps
-Potential enhancements include support for alternative nucleases/PAMs, include more off-targets information in the UI on the results page, and persistence beyond Redis (e.g., Postgres) for audit trails.
+Adjust paths for genome, PAM, and scoring assets. Example:
 
+|Setting|Default|Notes|
+|---|---|---|
+|`HG38_REFERENCE_FASTA`|`/data/genomes/hg38/hg38`|Chromosome FASTAs|
+|`CRISPRITZ_INDEX`|`/data/genomes/hg38/NGG_2_hg38`|Genome index|
+|`MISMATCH_SCORES`|`/data/CFD_scoring_matrix/mismatch_score.pkl`|CFD scoring|
+|`PAM_SCORES`|`/data/CFD_scoring_matrix/pam_scores.pkl`|CFD scoring|
+|`CRISPRITZ_RESULTS_DIR`|`/data/results`|Output directory|
+
+---
+
+## ▶️ Run
+
+`docker compose up -d --build`
+
+- Frontend: [http://localhost:3000](http://localhost:3000)
+    
+- API docs: [http://localhost:5001/docs](http://localhost:5001/docs)
+    
+
+Shutdown with:
+
+`docker compose down`
+
+---
+
+## 🧪 Testing
+
+Backend integration tests:
+
+`RUN_INTEGRATION=1 PYTHONPATH=backend pytest backend/tests`
+
+---
+
+## 🔮 Roadmap
+
+- Add support for more nucleases + PAMs.
+    
+- Persist results in Postgres for audit trails.
+    
+- **Genome viewer in the results page** for visualizing guide positions.

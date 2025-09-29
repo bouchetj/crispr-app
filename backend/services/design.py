@@ -214,10 +214,8 @@ def _guide_sort_key(g: Guide) -> float:
     rs3 = g.rs3_score
     spec = g.specificity
 
-    # RS3 ranges roughly (-1, 1); map to [0, 1] while clamping to guard outliers
     normalized_rs3 = 0.0 if rs3 is None else max(0.0, min(1.0, (rs3 + 1.0) / 2.0))
-    # Specificity ranges 0-100; scale to [0, 1]
-    normalized_spec = 0.0 if spec is None else max(0.0, min(1.0, spec / 100.0))
+    normalized_spec = 0.0 if spec is None else max(0.0, min(1.0, spec))
 
     base = 0.5 * normalized_rs3 + 0.5 * normalized_spec
 
