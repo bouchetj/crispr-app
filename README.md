@@ -22,18 +22,21 @@ Deployed via Docker for reproducible runs. Built to manage CRISPR guide design j
 
 ## 📸 Screenshots
 
-_(examples – place actual images in `/docs/screenshots/`)_
+1. **Landing Page** 
 
-1. **Dashboard** – system status & job submission.
+![Landing Page](./docs/screenshots/landing-page.png)
     
-2. **Job progress** – progress bar/spinner → green checkmark.
-    
-3. **Results table** – guides with scores, mismatches, off-targets.
-    
-4. **Genome viewer (coming soon)** – guides mapped onto input sequence.
-    
+2. **Job progress** _(Dark mode)_
 
-`![Dashboard Screenshot](docs/screenshots/dashboard.png)`
+![Job Progress](./docs/screenshots/job-progress.png)
+
+3. **Previous jobs**
+
+![Previous Jobs](./docs/screenshots/previous-jobs.png)
+    
+4. **Results table** – guides with scores, mismatches, off-targets.
+
+![Results table](./docs/screenshots/results-table.png)
 
 ---
 
@@ -112,16 +115,18 @@ Adjust paths for genome, PAM, and scoring assets. Example:
 
 ## ▶️ Run
 
-`docker compose up -d --build`
+Start the development stack with the helper script so the dev compose file is selected automatically:
+
+`./manage.sh --env dev up -d --build`
 
 - Frontend: [http://localhost:3000](http://localhost:3000)
     
 - API docs: [http://localhost:5001/docs](http://localhost:5001/docs)
     
 
-Shutdown with:
+Shut everything down when you're done with:
 
-`docker compose down`
+`./manage.sh --env dev down`
 
 ---
 
@@ -140,3 +145,5 @@ Backend integration tests:
 - Persist results in Postgres for audit trails.
     
 - **Genome viewer in the results page** for visualizing guide positions.
+   
+- Job status notifications via email
