@@ -109,7 +109,7 @@ export function JobDetailInProgress({ job, progressValue }: JobDetailInProgressP
             color="blue"
           >
             {STAGE_ORDER.map((item, index) => {
-              const isDesignStep = item.matches.includes('design:guides')
+              const isDesignStep = item.matches.includes('candidates_identified')
               const isDesignCompleted = isDesignStep && activeStep > index
               const stepDescription = isDesignCompleted && totalGuides != null ? `${item.description} Found ${totalGuides} guides.` : item.description
               return (

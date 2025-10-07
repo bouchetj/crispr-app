@@ -206,29 +206,16 @@ def design(
 
 def _guide_sort_key(g: Guide) -> float:
     """Return a composite score used to rank guides."""
-    # 1) hard rejects: send to the bottom
-    if not g.on_target_present:
-        return -1e9
-
-    # 2) base score: efficacy + specificity (normalize disparate scales)
+    # efficacy + specificity (normalize disparate scales)
     rs3 = g.rs3_score
     spec = g.specificity
 
     normalized_rs3 = 0.0 if rs3 is None else max(0.0, min(1.0, (rs3 + 1.0) / 2.0))
     normalized_spec = 0.0 if spec is None else max(0.0, min(1.0, spec))
 
-    base = 0.5 * normalized_rs3 + 0.5 * normalized_spec
+    base = 0.4 * normalized_rs3 + 0.6 * normalized_spec
 
-    # 3) multiplicative penalties
-    penalty = 1.0
-
-    # multi-targeting (count extra perfect copies as off-targets)
-    if getattr(g, "num_perfect_sites", 1) > 1:
-        penalty *= 0.2 ** (g.num_perfect_sites - 1)
-
-    score = base * penalty
-
-    return score
+    return base
 
 
 def _score_rs3(context_30mer: str) -> Optional[float]:

@@ -4,7 +4,11 @@ services:
     image: redis:7-alpine
     container_name: crispr_redis
     volumes:
-      - redis_data:/data
+      - /mnt/media/crispr_app/redis-data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    stop_signal: SIGTERM
+    stop_grace_period: 30s
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -16,8 +20,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      args:
-        APP_ENV: prod
     container_name: crispr_backend
     env_file:
       - ./.env.prod
@@ -28,19 +30,17 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app/backend
-      - ./data:/data
+      - /mnt/media/crispr_app/data:/data
     networks:
       - default
-
 
   # Frontend
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL}
-        APP_ENV: prod
+    env_file:
+      - ./.env.prod
     container_name: crispr_frontend
     depends_on:
       - backend
@@ -53,24 +53,23 @@ services:
       context: ./backend/celery_app
       dockerfile: Dockerfile
     container_name: celery_worker
-    cpus: 4
     cpu_shares: 512 
     env_file:
       - ./.env.prod
     environment:
       - PYTHONPATH=/app:/app/backend
       - PYTHONUNBUFFERED=1
-      - OMP_NUM_THREADS=4
-      - OPENBLAS_NUM_THREADS=4
-      - MKL_NUM_THREADS=4
-      - NUMEXPR_NUM_THREADS=4
+      - OMP_NUM_THREADS=1
+      - OPENBLAS_NUM_THREADS=1
+      - MKL_NUM_THREADS=1
+      - NUMEXPR_NUM_THREADS=1
     depends_on:
       redis:
         condition: service_healthy
     volumes:
       - ./backend:/app/backend
-      - ./data:/data
-    command: ["micromamba","run","-n","celery","celery","-A","backend.celery_app.celery_app.celery_app","worker","--loglevel=info"]
+      - /mnt/media/crispr_app/data:/data
+    command: ["micromamba","run","-n","celery","celery","-A","backend.celery_app.celery_app.celery_app","worker","--loglevel=info", "--concurrency=1"]
     networks:
       - default
 
