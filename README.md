@@ -3,8 +3,6 @@
 A full-stack CRISPR design tool integrating [CRISPRitz](https://github.com/pinellolab/CRISPRitz), [RS3](https://github.com/gpp-rnd/rs3) and [CFD](https://pmc.ncbi.nlm.nih.gov/articles/PMC4744125/) into a scalable web platform with a **FastAPI backend**, **React frontend**, and **Celery task queue**.  
 Deployed via Docker for reproducible runs. Built to manage CRISPR guide design jobs, off-target analysis, and scoring with a scalable, modular architecture.
 
-👉 **Try the live demo:** [https://crispr.jubslab.org](https://crispr.jubslab.org)
-
 ---
 
 ## 🚀 Features
